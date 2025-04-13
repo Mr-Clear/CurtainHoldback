@@ -1,10 +1,10 @@
 /* [General] */
 $fn = 100;
-Part = "SOCKET";  // [SOCKET:Socket, HOLD:Holdback, COMBINED:Combined]
+Part = "SOCKET";  // [SOCKET:Socket, HOLD:Holdback, PLUG:Plug, COMBINED:Combined]
 
 /* [Socket] */
 Socket_Diameter = 10;  // [1:0.1:50]
-Socket_Height = 40;    // [0:0.1:100]
+Socket_Height = 40;    // [0:0.1:200]
 
 Base_Diameter = 50;  // [1:0.1:100]
 Base_Height = 1;     // [0:0.01:10]
@@ -17,7 +17,7 @@ Countersunk_Angle = 90;      // [0:1:120]
 
 /* [Holdback] */
 Holdback_Diameter = 10;  // [1:0.1:50]
-Holdback_Length = 50;    // [1:0.1:50]
+Holdback_Length = 50;    // [1:0.1:200]
 
 /* [Joint] */
 Joint_Backlash = 10;       // [0:0.01:5]
@@ -42,9 +42,10 @@ else if (Part == "PLUG")
   color("#48F") Plug();
 else if (Part == "COMBINED") {
   color("#48F") Socket();
-  translate([ 0, Socket_Radius, Socket_Height + Holdback_Radius + Joint_Backlash ])
+  translate(
+      [ 0, Socket_Radius, Socket_Height + Holdback_Radius + Joint_Backlash ])
       rotate([ 90, 0, 0 ]) color("#F84") Hold();
-  translate([ 0, 0, Socket_Height + Holdback_Diameter + Joint_Backlash * 2])
+  translate([ 0, 0, Socket_Height + Holdback_Diameter + Joint_Backlash * 2 ])
       color("#FF0") Plug();
 }
 
@@ -62,7 +63,7 @@ module Socket_Base() {
       cylinder(h + Base_Height, r = Base_Radius);
       scale([ 1, 1, h / r ]) translate([ 0, 0, r + Base_Height ])
           rotate_extrude() translate([ Base_Radius, 0 ]) circle(r = r);
-      Screw_Circle(r);
+      Screw_Circle();
     }
   }
 }
@@ -102,7 +103,8 @@ module Socket_Joint() {
   }
 }
 
-module Screw_Circle(r) {
+module Screw_Circle() {
+  r = Base_Radius - Socket_Radius;
   if (Screw_Count > 0) {
     countersunk = (Screw_Head_Diameter / 2) * tan(Countersunk_Angle / 2);
     x = Base_Radius - (Screw_Circle_Diameter + Screw_Head_Diameter) / 2;
@@ -140,14 +142,39 @@ module Hold_Joint() {
   }
   if (Stop_Type != "NONE") {
     Stop_Dir = Stop_Type == "CW" ? 1 : -1;
-    translate(
-        [ 0, -Holdback_Radius - Stop_Dir * Stopper_Size / 2 - Joint_Backlash, Socket_Diameter ])
-        rotate([ 0, 0, 90 * Stop_Dir ]) intersection() {
+    translate([
+      0, -Holdback_Radius - Stop_Dir * Stopper_Size / 2 - Joint_Backlash,
+      Socket_Diameter
+    ]) rotate([ 0, 0, 90 * Stop_Dir ]) intersection() {
       translate([ Stopper_Size / 2, 0, 0 ]) sphere(3);
       translate([ 0, Joint_Backlash / 2, 0 ])
           cube([ Stopper_Size, Stopper_Size / 2, Stopper_Size / 2 ]);
     }
   }
+}
+
+module Plug() {
+  intersection() {
+    union() {
+      translate([ 0, 0, 0 ]) {
+        cylinder(Latch_Length / 3, r = Socket_Radius);
+        translate([ 0, 0, Latch_Length / 3 ])
+            cylinder(Latch_Length * 2 / 3, Socket_Radius,
+                     Holdback_Radius - Joint_Depth - Joint_Lock_Strenght -
+                         Joint_Backlash);
+      }
+    }
+
+    translate([ -Socket_Diameter / 2, -Joint_Depth + Joint_Backlash, 0 ]) cube([
+      Socket_Diameter + epsilon * 2, Joint_Depth * 2 - Joint_Backlash * 2,
+      Joint_Backlash * 2 + Latch_Length +
+      epsilon
+    ]);
+  }
+  translate([ 0, 0, Joint_Backlash - Holdback_Diameter ])
+      cylinder(Holdback_Diameter + Latch_Length - Joint_Backlash,
+               r = Holdback_Radius - Joint_Depth - Joint_Lock_Strenght -
+                   Joint_Backlash * 2);
 }
 
 module line(start, end, thickness = .1) {
