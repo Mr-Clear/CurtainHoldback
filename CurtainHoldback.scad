@@ -36,9 +36,9 @@ color("#48F") if (Part == "SOCKET") Socket();
 else if (Part == "HOLD") Hold();
 else if (Part == "COMBINED") {
   color("#48F") Socket();
-  translate([ 0, Socket_Radius, Socket_Height + Holdback_Radius + Holdback_Diameter* 2 ])
-      rotate([ 90, 0, 0 ]) color("#F84") Hold();
-  color("#F84") Hold();
+  translate([
+    0, Socket_Radius, Socket_Height + Holdback_Radius + Holdback_Diameter * 2
+  ]) rotate([ 90, 0, 0 ]) color("#F84") Hold();
 }
 
 module Socket() {
@@ -102,7 +102,26 @@ module Screw_Circle(r) {
   }
 }
 
-module Hold() { cylinder(Holdback_Length, r = Holdback_Radius); }
+module Hold() {
+  Hold_Joint();
+  translate([ 0, 0, Socket_Diameter ]) {
+    cylinder(Holdback_Length, r = Holdback_Radius);
+    translate([0,0, Holdback_Length])
+        sphere(Holdback_Radius);
+  }
+}
+module Hold_Joint() {
+  difference() {
+    hull() {
+      cylinder(Holdback_Diameter, 0, Socket_Radius);
+      translate([ 0, Socket_Radius, Holdback_Radius ]) rotate([ 90, 0, 0 ])
+          cylinder(Socket_Diameter, r = Holdback_Radius);
+    }
+    translate([ 0, Holdback_Radius + epsilon, Holdback_Radius ])
+        rotate([ 90, 0, 0 ]) cylinder(Holdback_Diameter + epsilon * 2,
+                                      r = Holdback_Radius - Joint_Depth);
+  }
+}
 
 module line(start, end, thickness = .1) {
   hull() {
