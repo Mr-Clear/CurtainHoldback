@@ -20,13 +20,13 @@ Holdback_Diameter = 10;  // [1:0.1:50]
 Holdback_Length = 50;    // [1:0.1:200]
 
 /* [Joint] */
-Joint_Backlash = 10;       // [0:0.01:5]
+Joint_Backlash = 0.1;      // [0:0.01:1]
 Joint_Depth = 1;           // [0:0.01:10]
 Joint_Lock_Strenght = .5;  // [0:0.01:10]
 Joint_Lock_Cutout = .5;    // [0:0.01:10]
 Latch_Length = 2;          //  [0:0.01:5]
 Stop_Type = "CCW";         // [NONE:None, CCW:Counter Clock Wise, CW:Clock Wise]
-Stopper_Size = 6;          // [0:0.1:10]
+Stopper_Size = 6;          // [0:0.1:50]
 
 /* [Hidden] */
 epsilon = 0.01;
@@ -72,17 +72,17 @@ module Socket_Joint() {
   difference() {
     union() {
       cylinder(Holdback_Diameter + Joint_Backlash * 2,
-               r = Holdback_Radius - Joint_Depth - Joint_Backlash);
+               r = Socket_Radius - Joint_Depth - Joint_Backlash);
       translate([ 0, 0, Holdback_Diameter + Joint_Backlash * 2 ]) {
         cylinder(Latch_Length / 3, r = Socket_Radius);
         translate([ 0, 0, Latch_Length / 3 ])
             cylinder(Latch_Length * 2 / 3, Socket_Radius,
-                     Holdback_Radius - Joint_Depth - Joint_Lock_Strenght -
+                     Socket_Radius - Joint_Depth - Joint_Lock_Strenght -
                          Joint_Backlash);
       }
     }
     cylinder(Holdback_Diameter + epsilon + Joint_Backlash * 2 + Latch_Length,
-             r = Holdback_Radius - Joint_Depth - Joint_Lock_Strenght -
+             r = Socket_Radius - Joint_Depth - Joint_Lock_Strenght -
                  Joint_Backlash);
     translate([ -Socket_Diameter / 2, -Joint_Depth, 0 ]) cube([
       Socket_Diameter + epsilon * 2, Joint_Depth * 2,
@@ -92,11 +92,12 @@ module Socket_Joint() {
   }
 
   if (Stop_Type != "NONE") {
-    Stop_Dir = Stop_Type == "CW" ? 1 : -1;
+    Stop_Dir = Stop_Type == "CCW" ? 1 : -1;
     translate(
         [ 0, -Socket_Radius + Stop_Dir * Stopper_Size / 2, -Stopper_Size / 2 ])
         rotate([ 0, 0, 90 * -Stop_Dir ]) intersection() {
-      translate([ Stopper_Size / 2, 0, Stopper_Size / 2 ]) sphere(3);
+      translate([ Stopper_Size / 2, 0, Stopper_Size / 2 ])
+          sphere(Stopper_Size / 2);
       translate([ 0, Joint_Backlash / 2, 0 ])
           cube([ Stopper_Size, Stopper_Size / 2, Stopper_Size / 2 ]);
     }
@@ -132,21 +133,21 @@ module Hold() {
 module Hold_Joint() {
   difference() {
     hull() {
-      cylinder(Holdback_Diameter, 0, Socket_Radius);
-      translate([ 0, Socket_Radius, Holdback_Radius ]) rotate([ 90, 0, 0 ])
-          cylinder(Socket_Diameter, r = Holdback_Radius);
+      cylinder(Socket_Diameter, 0, Holdback_Radius);
+      translate([ 0, Holdback_Radius, Socket_Radius ]) rotate([ 90, 0, 0 ])
+          cylinder(Holdback_Diameter, r = Socket_Radius);
     }
-    translate([ 0, Holdback_Radius + epsilon, Holdback_Radius ])
+    translate([ 0, Holdback_Radius + epsilon, Socket_Radius ])
         rotate([ 90, 0, 0 ]) cylinder(Holdback_Diameter + epsilon * 2,
-                                      r = Holdback_Radius - Joint_Depth);
+                                      r = Socket_Radius - Joint_Depth);
   }
   if (Stop_Type != "NONE") {
-    Stop_Dir = Stop_Type == "CW" ? 1 : -1;
+    Stop_Dir = Stop_Type == "CCW" ? 1 : -1;
     translate([
       0, -Holdback_Radius - Stop_Dir * Stopper_Size / 2 - Joint_Backlash,
       Socket_Diameter
     ]) rotate([ 0, 0, 90 * Stop_Dir ]) intersection() {
-      translate([ Stopper_Size / 2, 0, 0 ]) sphere(3);
+      translate([ Stopper_Size / 2, 0, 0 ]) sphere(Stopper_Size / 2);
       translate([ 0, Joint_Backlash / 2, 0 ])
           cube([ Stopper_Size, Stopper_Size / 2, Stopper_Size / 2 ]);
     }
@@ -160,20 +161,19 @@ module Plug() {
         cylinder(Latch_Length / 3, r = Socket_Radius);
         translate([ 0, 0, Latch_Length / 3 ])
             cylinder(Latch_Length * 2 / 3, Socket_Radius,
-                     Holdback_Radius - Joint_Depth - Joint_Lock_Strenght -
+                     Socket_Radius - Joint_Depth - Joint_Lock_Strenght -
                          Joint_Backlash);
       }
     }
-
     translate([ -Socket_Diameter / 2, -Joint_Depth + Joint_Backlash, 0 ]) cube([
       Socket_Diameter + epsilon * 2, Joint_Depth * 2 - Joint_Backlash * 2,
       Joint_Backlash * 2 + Latch_Length +
       epsilon
     ]);
   }
-  translate([ 0, 0, Joint_Backlash - Holdback_Diameter ])
+  translate([ 0, 0, Joint_Backlash - Holdback_Diameter])
       cylinder(Holdback_Diameter + Latch_Length - Joint_Backlash,
-               r = Holdback_Radius - Joint_Depth - Joint_Lock_Strenght -
+               r = Socket_Radius - Joint_Depth - Joint_Lock_Strenght -
                    Joint_Backlash * 2);
 }
 
