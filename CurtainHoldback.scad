@@ -99,14 +99,14 @@ module Mount_Joint_Cutout(Backlash) {
     Lever_Diameter + Joint_Backlash * 2 + Latch_Length +
     epsilon
   ]);
-  translate(
-      [ Mount_Radius - Joint_Depth + Backlash, -Mount_Radius, Lever_Diameter ])
-      cube([
-        Joint_Depth - Backlash, Mount_Diameter, Latch_Length + Joint_Backlash
-      ]);
-  translate([ -Mount_Radius, -Mount_Radius, Lever_Diameter ]) cube([
-    Joint_Depth - Backlash, Mount_Diameter, Latch_Length + Joint_Backlash
-  ]);
+  translate([ 0, -Mount_Radius, Lever_Diameter - epsilon ]) {
+    translate([ Mount_Radius - Joint_Depth + Backlash, 0, 0 ]) cube([
+      Joint_Depth - Backlash, Mount_Diameter, Latch_Length + Joint_Backlash
+    ]);
+    translate([ -Mount_Radius, 0, 0 ]) cube([
+      Joint_Depth - Backlash, Mount_Diameter, Latch_Length + Joint_Backlash
+    ]);
+  }
 }
 
 module Screw_Circle() {
@@ -153,7 +153,8 @@ module Stop(Base_Diameter, Stopper_Size, Type) {
   Base_Radius = Base_Diameter / 2;
   Stop_Base = -Base_Radius - Stopper_Size / 2;
   if (Type != "NONE") {
-    rotate([ 0, 0, 90 ]) scale([ 1, Type == "CCW" ? 1 : -1, 1 ]) intersection() {
+    rotate([ 0, 0, 90 ]) scale([ 1, Type == "CCW" ? 1 : -1, 1 ])
+        intersection() {
       hull() {
         translate([ 0, 0, 0 ]) cylinder(Stopper_Size, r = Base_Radius);
         translate([ Stopper_Size / 2 + Stop_Base, 0, 0 ])
