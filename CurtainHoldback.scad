@@ -114,7 +114,7 @@ module Screw_Circle() {
   if (Screw_Count > 0) {
     countersunk = (Screw_Head_Diameter / 2) * tan(Countersunk_Angle / 2);
     x = Base_Radius - (Screw_Circle_Diameter + Screw_Head_Diameter) / 2;
-    y = r - sqrt(r ^ 2 - x ^ 2);
+    y = r - sqrt(pow(r, 2) - pow(x, 2));
     translate([ 0, 0, Base_Height ]) for (i = [0:Screw_Count - 1]) {
       rotate([ 0, 0, i * 360 / Screw_Count ])
           translate([ Screw_Circle_Diameter / 2, 0, -epsilon ]) union() {
