@@ -1,4 +1,4 @@
-//It's a good thing you were wearing that helmet
+// It's a good thing you were wearing that helmet
 /* [General] */
 $fn = 100;
 Part = "MOUNT";  // [MOUNT:Mount, LEVER:Lever, CAP:Cap, COMBINED:Combined]
@@ -28,6 +28,7 @@ Joint_Lock_Cutout = .5;    // [0:0.01:10]
 Latch_Length = 2;          // [0:0.01:5]
 Stop_Type = "CCW";         // [NONE:None, CCW:Counter Clock Wise, CW:Clock Wise]
 Stopper_Size = 6;          // [0:0.1:50]
+Cap_Backlash = .02;        // [0:0.01:1]
 
 /* [Hidden] */
 epsilon = 0.01;
@@ -43,8 +44,7 @@ else if (Part == "CAP")
   color("#48F") Cap();
 else if (Part == "COMBINED") {
   color("#48F") Mount();
-  translate(
-      [ 0, Mount_Radius, Mount_Height + Lever_Radius + Joint_Backlash ])
+  translate([ 0, Mount_Radius, Mount_Height + Lever_Radius + Joint_Backlash ])
       rotate([ 90, 0, 0 ]) color("#F84") Lever();
   translate([ 0, 0, Mount_Height + Lever_Diameter + Joint_Backlash * 2 ])
       color("#FF0") Cap();
@@ -81,7 +81,7 @@ module Mount_Joint() {
             Mount_Radius - Joint_Depth - Joint_Lock_Strenght - Joint_Backlash);
       }
     }
-    Mount_Joint_Cutout();
+    translate([ 0, 0, Joint_Backlash * 2 ]) Mount_Joint_Cutout(0);
   }
 
   if (Stop_Type != "NONE") {
@@ -97,16 +97,25 @@ module Mount_Joint() {
   }
 }
 
-module Mount_Joint_Cutout() {
+module Mount_Joint_Cutout(Backlash) {
   hc = Lever_Diameter + epsilon + Joint_Backlash * 2 + Latch_Length;
-  rc = Mount_Radius - Joint_Depth - Joint_Lock_Strenght - Joint_Backlash;
+  rc = Mount_Radius - Joint_Depth - Joint_Lock_Strenght - Backlash;
   rat = rc / hc * 2;
   translate([ 0, 0, hc * 1 / 3 ]) cylinder(hc * 2 / 3, r = rc);
-  translate([ 0, 0, hc / 3 ]) scale([ rat, rat, 2 / 3 ]) sphere(hc / 2);
-  translate([ -Mount_Diameter / 2, -Joint_Depth, 0 ]) cube([
-    Mount_Diameter + epsilon * 2, Joint_Depth * 2,
+  translate([ 0, 0, hc / 3 + Backlash ]) scale([ rat, rat, 2 / 3 ])
+      sphere(hc / 2);
+  translate([ -Mount_Diameter / 2, -Joint_Depth + Backlash, Backlash ]) cube([
+    Mount_Diameter + epsilon * 2, Joint_Depth * 2 - Backlash * 2,
     Lever_Diameter + Joint_Backlash * 2 + Latch_Length +
     epsilon
+  ]);
+  translate(
+      [ Mount_Radius - Joint_Depth + Backlash, -Mount_Radius, Lever_Diameter ])
+      cube([
+        Joint_Depth - Backlash, Mount_Diameter, Latch_Length + Joint_Backlash
+      ]);
+  translate([ -Mount_Radius, -Mount_Radius, Lever_Diameter ]) cube([
+    Joint_Depth - Backlash, Mount_Diameter, Latch_Length + Joint_Backlash
   ]);
 }
 
@@ -143,9 +152,8 @@ module Lever_Joint() {
       translate([ 0, Lever_Radius, Mount_Radius ]) rotate([ 90, 0, 0 ])
           cylinder(Lever_Diameter, r = Mount_Radius);
     }
-    translate([ 0, Lever_Radius + epsilon, Mount_Radius ])
-        rotate([ 90, 0, 0 ]) cylinder(Lever_Diameter + epsilon * 2,
-                                      r = Mount_Radius - Joint_Depth);
+    translate([ 0, Lever_Radius + epsilon, Mount_Radius ]) rotate([ 90, 0, 0 ])
+        cylinder(Lever_Diameter + epsilon * 2, r = Mount_Radius - Joint_Depth);
   }
   if (Stop_Type != "NONE") {
     Stop_Dir = Stop_Type == "CCW" ? 1 : -1;
@@ -164,22 +172,21 @@ module Cap() {
   intersection() {
     union() {
       translate([ 0, 0, Joint_Backlash ]) {
-        translate([ 0, 0, -Lever_Diameter ])
-            cylinder(Latch_Length / 3 + Lever_Diameter, r = Mount_Radius);
-        translate([ 0, 0, Latch_Length / 3 ]) cylinder(
+        translate([ 0, 0, -Lever_Diameter - Joint_Backlash + Cap_Backlash ])
+            cylinder(Latch_Length / 3 + Lever_Diameter - Cap_Backlash,
+                     r = Mount_Radius);
+        translate([ 0, 0, Latch_Length / 3 - Joint_Backlash ]) cylinder(
             Latch_Length * 2 / 3, Mount_Radius,
             Mount_Radius - Joint_Depth - Joint_Lock_Strenght - Joint_Backlash);
       }
     }
-    s = (Mount_Radius - Joint_Backlash) / Mount_Radius;
     intersection() {
-      scale([ s, s, 1 ]) translate([ 0, 0, Joint_Backlash - Lever_Diameter ])
-          scale([ 1, 1, 1 ]) Mount_Joint_Cutout();
+      translate([ 0, 0, Joint_Backlash - Lever_Diameter - Joint_Backlash ])
+          Mount_Joint_Cutout(Cap_Backlash);
       union() {
         cylinder(Latch_Length, r = Mount_Radius);
-        translate([ 0, 0, -Lever_Diameter ])
-            cylinder(Lever_Diameter,
-                     r = Mount_Radius - Joint_Depth - Joint_Backlash);
+        translate([ 0, 0, -Lever_Diameter ]) cylinder(
+            Lever_Diameter, r = Mount_Radius - Joint_Depth - Joint_Backlash);
       }
     }
   }
