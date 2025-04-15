@@ -1,10 +1,10 @@
 // It's a good thing you were wearing that helmet
 /* [General] */
 $fn = 100;
-Part = "MOUNT";  // [MOUNT:Mount, LEVER:Lever, CAP:Cap, COMBINED:Combined]
+Part = "COMBINED";  // [MOUNT:Mount, LEVER:Lever, CAP:Cap, COMBINED:Combined]
 
 /* [Mount] */
-Mount_Diameter = 10;  // [1:0.1:50]
+Mount_Diameter = 15;  // [1:0.1:50]
 Mount_Height = 40;    // [0:0.1:200]
 
 Base_Diameter = 50;  // [1:0.1:100]
