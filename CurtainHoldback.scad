@@ -45,7 +45,7 @@ else if (Part == "CAP")
 else if (Part == "COMBINED") {
   color("#48F") Mount();
   translate([ 0, Mount_Radius, Mount_Height + Lever_Radius + Joint_Backlash ])
-      rotate([ 90, 0, 0 ]) color("#F84") Lever();
+      rotate([ 90, 0, -0 ]) color("#F84") Lever();
   translate([ 0, 0, Mount_Height + Lever_Diameter + Joint_Backlash * 2 ])
       color("#FF0") Cap();
 }
@@ -83,18 +83,8 @@ module Mount_Joint() {
     }
     translate([ 0, 0, Joint_Backlash * 2 ]) Mount_Joint_Cutout(0);
   }
-
-  if (Stop_Type != "NONE") {
-    Stop_Dir = Stop_Type == "CCW" ? 1 : -1;
-    translate(
-        [ 0, -Mount_Radius + Stop_Dir * Stopper_Size / 2, -Stopper_Size / 2 ])
-        rotate([ 0, 0, 90 * -Stop_Dir ]) intersection() {
-      translate([ Stopper_Size / 2, 0, Stopper_Size / 2 ])
-          sphere(Stopper_Size / 2);
-      translate([ 0, Joint_Backlash / 2, 0 ])
-          cube([ Stopper_Size, Stopper_Size / 2, Stopper_Size / 2 ]);
-    }
-  }
+  translate([ 0, 0, 0 ]) rotate([ 0, 180, 0 ])
+      Stop(Mount_Diameter, Stopper_Size, Stop_Type);
 }
 
 module Mount_Joint_Cutout(Backlash) {
@@ -155,15 +145,26 @@ module Lever_Joint() {
     translate([ 0, Lever_Radius + epsilon, Mount_Radius ]) rotate([ 90, 0, 0 ])
         cylinder(Lever_Diameter + epsilon * 2, r = Mount_Radius - Joint_Depth);
   }
-  if (Stop_Type != "NONE") {
-    Stop_Dir = Stop_Type == "CCW" ? 1 : -1;
-    translate([
-      0, -Lever_Radius - Stop_Dir * Stopper_Size / 2 - Joint_Backlash,
-      Mount_Diameter
-    ]) rotate([ 0, 0, 90 * Stop_Dir ]) intersection() {
-      translate([ Stopper_Size / 2, 0, 0 ]) sphere(Stopper_Size / 2);
-      translate([ 0, Joint_Backlash / 2, 0 ])
-          cube([ Stopper_Size, Stopper_Size / 2, Stopper_Size / 2 ]);
+  translate([ 0, 0, Mount_Diameter + Joint_Backlash / 2 ])
+      Stop(Lever_Diameter, Stopper_Size, Stop_Type);
+}
+
+module Stop(Base_Diameter, Stopper_Size, Type) {
+  Base_Radius = Base_Diameter / 2;
+  Stop_Base = -Base_Radius - Stopper_Size / 2;
+  if (Type != "NONE") {
+    rotate([ 0, 0, 90 ]) scale([ 1, Type == "CCW" ? 1 : -1, 1 ]) intersection() {
+      hull() {
+        translate([ 0, 0, 0 ]) cylinder(Stopper_Size, r = Base_Radius);
+        translate([ Stopper_Size / 2 + Stop_Base, 0, 0 ])
+            cylinder(Stopper_Size / 2, r = Stopper_Size / 2);
+      }
+      union() {
+        translate([ Stop_Base, 0, 0 ])
+            cube([ Stopper_Size, Base_Radius, Stopper_Size ]);
+        translate([ 0, 0, Stopper_Size / 2 ])
+            cylinder(Stopper_Size / 2, r = Base_Radius + Stopper_Size / 2);
+      }
     }
   }
 }
