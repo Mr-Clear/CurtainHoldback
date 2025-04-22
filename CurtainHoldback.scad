@@ -1,4 +1,3 @@
-// It's a good thing you were wearing that helmet
 /* [General] */
 $fn = 100;
 Part = "COMBINED";  // [MOUNT:Mount, LEVER:Lever, CAP:Cap, COMBINED:Combined]
